@@ -1,0 +1,248 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<html>
+
+<head>
+  <title>15 Puzzle Game</title>
+  <meta name="generator" content="Microsoft FrontPage 4.0">
+  <style>
+    /* 스타일 추가: 입력칸 너비 조정 */
+    input[type="text"] {
+      width: 25px;
+    }
+  </style>
+  <script language="JavaScript">
+    var wnd, Shuffled = false;
+    var currentFolder = "";
+    var startTime, endTime;
+    var timerId; // 타이머 ID를 저장할 변수
+    var show = 0;
+
+
+    // 문자열을 구분자로 나누는 함수
+    function ssplit(dc, istr) { 
+      slist = new Array();
+      inx = 0;
+      pix = 0;
+      tstr = istr;
+      ac = 0;
+
+      while (1) {
+        inx = tstr.indexOf(dc, 1);
+        if (inx == -1) {
+          if (tstr.length > 0) {
+            slist[ac] = tstr;
+          }
+          break;
+        }
+        slist[ac++] = tstr.substring(0, inx);
+        tstr = tstr.substr(inx + 1);
+      }
+      return slist;
+    }
+
+
+    // 퍼즐 위치 정보 계산 함수
+    function GetX(num) {
+      var rest = num - Math.floor(num / 4) * 4;
+      return (rest == 0) ? 4 : rest;
+    }
+
+    function GetY(num) {
+      return Math.floor((num - 1) / 4) + 1;
+    }
+
+    function GetIndex(x, y) {
+      return x + (y - 1) * 4;
+    }
+
+    function NewDir(p) {
+      var dir;
+
+      if ((p == 2) || (p == 3)) dir = (Math.floor(Math.random() + 0.5) == 0) ? -1 : 1;
+      else dir = (p == 1) ? 1 : -1;
+      return (p + dir);
+    }
+
+    function NewMove(num) {
+      var x, y;
+
+      x = GetX(num);
+      y = GetY(num);
+      if (Math.floor(Math.random() + 0.5) == 0) x = NewDir(x);
+      else y = NewDir(y);
+      return GetIndex(x, y);
+    }
+
+
+    // 퍼즐 섞기 함수
+    function Shuffle() {
+      var A = new Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+      var iter, i, str, num, numnew, numold;
+
+      iter = Math.floor(Math.random() * 200 + 0.5) + 100;
+      numold = 16;
+
+      for (i = 1; i < iter; i++) {
+        numnew = NewMove(numold);
+        A[numold - 1] = A[numnew - 1];
+        A[numnew - 1] = 16;
+        numold = numnew;
+      }
+
+      for (i = 1; i < 17; i++) {
+        num = A[i - 1];
+        str = "";
+        document.images["i" + i].src = currentFolder + "/" + str + num + ".gif";
+      }
+      Shuffled = true;
+      startTimer(); // 셔플링이 시작될 때 타이머 시작
+    }
+
+    function showAnswer() {
+        var imgDisplay = document.getElementById('imageDisplay');
+        // 기존에 표시된 이미지를 모두 제거
+        while (imgDisplay.firstChild) {
+          imgDisplay.removeChild(imgDisplay.firstChild);
+        }
+        // 새 이미지를 생성하고 표시
+        var img = document.createElement('img');
+        img.src = currentFolder + '/17.gif';
+        img.width = 400;
+        img.height = 400;
+        imgDisplay.appendChild(img);
+      }
+      
+    
+    function displayButton() {
+        var showAnswerButton = document.createElement('input');
+        showAnswerButton.type = 'button';
+        showAnswerButton.value = '정답보기';
+        showAnswerButton.onclick = function() { showAnswer(); };
+        
+        document.getElementById('imageDisplay').appendChild(showAnswerButton);
+      }
+      
+
+    // 이미지 디스플레이 함수
+    function displayImage() {
+      var imgDisplay = document.getElementById('imageDisplay');
+      // 기존에 표시된 이미지를 모두 제거합니다.
+      while (imgDisplay.firstChild) {
+        imgDisplay.removeChild(imgDisplay.firstChild);
+      }
+      // 새 이미지를 생성하고 표시
+      if(show == 1){
+        var img = document.createElement('img');
+        img.src = currentFolder + '/17.gif';
+        img.width = 200;
+        img.height = 200;
+        imgDisplay.appendChild(img);
+      }
+    }
+      
+      
+
+
+    // 퍼즐 셔플 시작 함수
+    function startShuffle() {
+      if (currentFolder !== "") {
+        resetTimer(); // 이전 게임의 타이머 초기화
+        Shuffle();
+        document.getElementById('gameBoard').style.display = 'block';
+        displayImage();
+      } else {
+        alert("그림을 먼저 선택해주세요.");
+      }
+    }
+
+
+    // 타이머 초기화 함수
+    function resetTimer() {
+      startTime = null;
+      endTime = null;
+      if (timerId) {
+        clearInterval(timerId); // 타이머가 실행 중이면 중지합니다.
+      }
+    }
+
+
+    // 타이머 시작 함수
+    function startTimer() {
+        startTime = new Date();
+  // 1초마다 경과 시간을 계산하고 화면에 표시하는 코드
+  timerId = setInterval(function () {
+    var elapsedTime = getElapsedTime();
+    document.getElementById('elapsedTime').value = elapsedTime;
+}, 1000);
+}
+
+
+    // 타이머 종료 함수
+    function stopTimer() {
+      endTime = new Date();
+      // 타이머를 중지
+      clearInterval(timerId);
+    }
+
+
+    // 경과 시간 계산 함수
+    function getElapsedTime() {
+        var now = endTime ? endTime : new Date();
+        var start = startTime ? startTime : now; 
+        var totalSeconds = Math.floor((now - start) / 1000); // 초 단위로 반환
+        return totalSeconds;
+}
+
+  </script>
+</head>
+
+<body bgcolor="skyblue" text="black" link="#0000EE" vlink="#551A8B" alink="red">
+
+  <h2 align="center">이미지 맞추기 게임</h2>
+  <div align="center">
+    <table border>
+      <tr>
+        <td width="50%" align="center">
+          <div id="gameBoard" style="display: none;">
+            <script language="JavaScript">
+                // 게임 보드 생성
+              with (window.document) {
+                open();
+                writeln('<table border=1 cellpadding=0 cellspacing=1>');
+                for (var i = 1; i < 17; i++) {
+                  if (i == 1 || i == 5 || i == 9 || i == 13) {
+                    writeln('<tr>');
+                  }
+                  writeln('  <td width=49 height=49>');
+                  writeln('      <a href=JavaScript:void(0); onclick=ActiveImage(', i, ');>');
+                  writeln('       <img src=', currentFolder, '/', i, '.gif border=0 width=49 height=49 name=i', i, '></a>');
+                  writeln('  </td>');
+                  if (i == 4 || i == 8 || i == 12 || i == 16) {
+                    writeln('</tr>');
+                  }
+                }
+                writeln('</table>');
+                close();
+              }
+            </script>
+          </div>
+          <p align="center">
+            <!-- 게임 제어 버튼 및 그림 선택 버튼 -->
+            <input type="text" value="" id="elapsedTime" readonly>
+            <input type="button" value="재시작" onclick="startShuffle(); displayButton()">
+            <input type="button" value="그림1" onclick="currentFolder='dog'; startShuffle(); displayButton()">
+            <input type="button" value="그림2" onclick="currentFolder='panda'; startShuffle(); displayButton()">
+            <input type="button" value="그림3" onclick="currentFolder='ham'; startShuffle(); displayButton()">
+            <input type="button" value="그림4" onclick="currentFolder='dog'; startShuffle(); displayButton()">            
+          </p>
+        </td>
+        <td width="80%" align="center" id="imageDisplay">
+          <!-- 이미지 표시 영역 -->
+          <input type="button" value="정답보기" onclick="showAnswer()">
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+
+</html>
